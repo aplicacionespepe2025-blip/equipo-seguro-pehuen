@@ -138,9 +138,15 @@ export const ReportHistory: React.FC = () => {
     });
   }, [reportes, fechaInicio, fechaFin, evaluadorBusqueda, estadoCulturaFiltro, turnoFiltro, user]);
 
+  const canEditOrDelete = user?.role === 'ADMINISTRADOR' || user?.role === 'SUPERVISOR';
+
   // Manejo de edicion de reporte
   const handleSaveEdit = async (updatedData: Partial<ReporteSeguridad>) => {
     if (!editingReport?.id) return;
+    if (!canEditOrDelete) {
+      alert('Acceso Denegado: Los usuarios con rol USUARIO no tienen permisos para editar registros.');
+      return;
+    }
     await actualizarReporte(editingReport.id, updatedData);
     setReportes((prev) =>
       prev.map((r) => (r.id === editingReport.id ? { ...r, ...updatedData } : r))
@@ -150,6 +156,10 @@ export const ReportHistory: React.FC = () => {
   // Manejo de eliminación
   const handleDelete = async (id?: string) => {
     if (!id) return;
+    if (!canEditOrDelete) {
+      alert('Acceso Denegado: Los usuarios con rol USUARIO no tienen permisos para eliminar registros.');
+      return;
+    }
     if (window.confirm('¿Está seguro de que desea eliminar este reporte permanentemente?')) {
       try {
         await eliminarReporte(id);
@@ -516,14 +526,16 @@ export const ReportHistory: React.FC = () => {
                     <span>Ver</span>
                   </button>
 
-                  <button
-                    onClick={() => setEditingReport(r)}
-                    title="Editar Registro"
-                    className="p-2 bg-[#FAF8EA] hover:bg-[#BCB703]/20 text-[#3E3933] font-bold rounded-xl border border-[#D1CB9E] transition-colors cursor-pointer flex items-center space-x-1 text-xs"
-                  >
-                    <Pencil className="w-3.5 h-3.5 text-[#8A8602]" />
-                    <span>Editar</span>
-                  </button>
+                  {canEditOrDelete && (
+                    <button
+                      onClick={() => setEditingReport(r)}
+                      title="Editar Registro"
+                      className="p-2 bg-[#FAF8EA] hover:bg-[#BCB703]/20 text-[#3E3933] font-bold rounded-xl border border-[#D1CB9E] transition-colors cursor-pointer flex items-center space-x-1 text-xs"
+                    >
+                      <Pencil className="w-3.5 h-3.5 text-[#8A8602]" />
+                      <span>Editar</span>
+                    </button>
+                  )}
 
                   <button
                     onClick={() => exportarReporteIndividualPDF(r)}
@@ -533,13 +545,15 @@ export const ReportHistory: React.FC = () => {
                     <FileText className="w-4 h-4" />
                   </button>
 
-                  <button
-                    onClick={() => handleDelete(r.id)}
-                    title="Eliminar Registro"
-                    className="p-2 bg-[#FAF8EA] hover:bg-red-100 text-[#D37608] rounded-xl border border-[#D1CB9E] transition-colors cursor-pointer"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+                  {canEditOrDelete && (
+                    <button
+                      onClick={() => handleDelete(r.id)}
+                      title="Eliminar Registro"
+                      className="p-2 bg-[#FAF8EA] hover:bg-red-100 text-[#D37608] rounded-xl border border-[#D1CB9E] transition-colors cursor-pointer"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
 
               </div>
@@ -589,13 +603,15 @@ export const ReportHistory: React.FC = () => {
                           >
                             <Eye className="w-4 h-4" />
                           </button>
-                          <button
-                            onClick={() => setEditingReport(r)}
-                            title="Editar Registro"
-                            className="p-1.5 text-[#8A8602] hover:bg-[#FAF8EA] rounded-lg cursor-pointer flex items-center space-x-1 text-xs font-bold"
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </button>
+                          {canEditOrDelete && (
+                            <button
+                              onClick={() => setEditingReport(r)}
+                              title="Editar Registro"
+                              className="p-1.5 text-[#8A8602] hover:bg-[#FAF8EA] rounded-lg cursor-pointer flex items-center space-x-1 text-xs font-bold"
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                          )}
                           <button
                             onClick={() => exportarReporteIndividualPDF(r)}
                             title="PDF Individual"
@@ -603,13 +619,15 @@ export const ReportHistory: React.FC = () => {
                           >
                             <FileText className="w-4 h-4" />
                           </button>
-                          <button
-                            onClick={() => handleDelete(r.id)}
-                            title="Eliminar Registro"
-                            className="p-1.5 text-[#D37608] hover:bg-red-100 rounded-lg cursor-pointer"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          {canEditOrDelete && (
+                            <button
+                              onClick={() => handleDelete(r.id)}
+                              title="Eliminar Registro"
+                              className="p-1.5 text-[#D37608] hover:bg-red-100 rounded-lg cursor-pointer"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
