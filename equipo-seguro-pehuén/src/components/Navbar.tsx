@@ -163,7 +163,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, openA
                   {/* Dropdown flotante de cambio rápido de rol para testing */}
                   <div className="absolute right-0 top-full mt-2 w-48 bg-[#3E3933] border border-[#80776D] rounded-xl shadow-2xl p-2 hidden group-hover:block z-50">
                     <p className="text-[10px] font-bold text-[#D1CB9E] px-2 py-1 uppercase tracking-wider">
-                      Cambiar Rol (Modo Demo)
+                      Cambiar Rol
                     </p>
                     <button
                       onClick={() => switchRoleQuick('ADMINISTRADOR')}
@@ -203,15 +203,8 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, openA
             ) : (
               <div className="flex items-center space-x-2">
                 <button
-                  onClick={() => quickDemoLogin('SUPERVISOR')}
-                  className="flex items-center space-x-1.5 bg-[#BCB703] hover:bg-[#8A8602] text-[#3E3933] px-3.5 py-2 rounded-xl text-xs font-bold shadow-md transition-all cursor-pointer"
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span>Modo Demo</span>
-                </button>
-                <button
                   onClick={openAuthModal}
-                  className="flex items-center space-x-1.5 bg-[#3E3933] hover:bg-[#282420] text-[#F2EDC9] border border-[#80776D] px-3.5 py-2 rounded-xl text-xs font-bold transition-colors cursor-pointer"
+                  className="flex items-center space-x-1.5 bg-[#BCB703] hover:bg-[#8A8602] text-[#3E3933] px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-md"
                 >
                   <User className="w-3.5 h-3.5" />
                   <span>Ingresar</span>

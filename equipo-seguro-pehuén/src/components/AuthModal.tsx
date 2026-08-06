@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Lock, Mail, User, ShieldCheck, Sparkles, ArrowRight } from 'lucide-react';
+import { X, Lock, Mail, User, ShieldCheck, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { UserRole } from '../types';
 
@@ -8,7 +8,7 @@ interface AuthModalProps {
 }
 
 export const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
-  const { login, registerUser, loginWithGoogle, quickDemoLogin } = useAuth();
+  const { login, registerUser, loginWithGoogle } = useAuth();
 
   const [isRegister, setIsRegister] = useState<boolean>(false);
   const [email, setEmail] = useState<string>('');
@@ -51,18 +51,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
     }
   };
 
-  const handleDemo = async (demoRole: UserRole) => {
-    setLoading(true);
-    try {
-      await quickDemoLogin(demoRole);
-      onClose();
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#3E3933]/80 backdrop-blur-md animate-fade-in">
       <div className="bg-[#FAF8EA] border border-[#D1CB9E] w-full max-w-md rounded-3xl shadow-2xl overflow-hidden">
@@ -93,38 +81,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onClose }) => {
 
         {/* Form Body */}
         <div className="p-6 space-y-5">
-
-          {/* Quick Demo Buttons */}
-          <div className="bg-[#EFEAD0] p-3.5 rounded-2xl border border-[#D1CB9E] space-y-2">
-            <span className="text-[10px] font-bold uppercase text-[#8A8602] tracking-wider flex items-center space-x-1">
-              <Sparkles className="w-3 h-3" />
-              <span>Ingreso Rápido de Prueba (Demo)</span>
-            </span>
-
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => handleDemo('ADMINISTRADOR')}
-                className="bg-[#BCB703] hover:bg-[#8A8602] text-[#3E3933] text-[11px] font-bold py-2 rounded-xl transition-all text-center cursor-pointer shadow-sm"
-              >
-                ADMIN
-              </button>
-              <button
-                type="button"
-                onClick={() => handleDemo('SUPERVISOR')}
-                className="bg-[#676057] hover:bg-[#3E3933] text-[#F2EDC9] text-[11px] font-bold py-2 rounded-xl transition-all text-center cursor-pointer shadow-sm"
-              >
-                SUPERVISOR
-              </button>
-              <button
-                type="button"
-                onClick={() => handleDemo('USUARIO')}
-                className="bg-[#FAF8EA] hover:bg-[#EFEAD0] text-[#3E3933] border border-[#D1CB9E] text-[11px] font-bold py-2 rounded-xl transition-all text-center cursor-pointer shadow-sm"
-              >
-                USUARIO
-              </button>
-            </div>
-          </div>
 
           {/* Google Auth Button */}
           <button
