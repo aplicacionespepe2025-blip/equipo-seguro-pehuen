@@ -1,0 +1,36 @@
+{
+  "entities": {
+    "users": {
+      "title": "users",
+      "description": "User profiles and roles for Equipo Seguro Pehuén Ltda.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "role": { "type": "string" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "reportes": {
+      "title": "reportes",
+      "description": "Evaluaciones de cultura y seguridad en terreno",
+      "type": "object",
+      "properties": {
+        "Id_Evento": { "type": "string" },
+        "Fecha": { "type": "string" },
+        "Cancha": { "type": "string" },
+        "Nombre": { "type": "string" },
+        "NombreEvaluador": { "type": "string" },
+        "Turno": { "type": "string" },
+        "EstadoCultura": { "type": "string" },
+        "EnQueFallamos": { "type": "string" },
+        "CualEsNuestroCompromiso": { "type": "string" },
+        "Observaciones": { "type": "string" },
+        "Imagen": { "type": "string" },
+        "FechaHoraRegistro": { "type": "string" }
+      },
+      "required": ["Id_Evento", "Fecha", "NombreEvaluador", "EstadoCultura"]
+    }
+  }
+}
