@@ -132,7 +132,7 @@ export const ReportDetailModal: React.FC<ReportDetailModalProps> = ({
           </div>
 
           {/* Evidencia Fotográfica */}
-          {reporte.Imagen && (
+          {reporte.Imagen && (reporte.EstadoCultura || '').toLowerCase() !== 'a' && (
             <div className="space-y-2">
               <h4 className="text-xs font-bold uppercase text-[#676057] flex items-center space-x-1">
                 <ImageIcon className="w-4 h-4 text-[#8A8602]" />

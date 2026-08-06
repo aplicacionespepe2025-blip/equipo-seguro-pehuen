@@ -37,6 +37,13 @@ export interface ReportFilterState {
   turno: string;
 }
 
+export const PRESET_SAMPLE_PHOTOS = [
+  { label: 'EHS Cancha 1', url: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=600&q=80' },
+  { label: 'EPP Taller', url: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=600&q=80' },
+  { label: 'Inspección Faena', url: 'https://images.unsplash.com/photo-1581092335397-9583fe92d232?auto=format&fit=crop&w=600&q=80' },
+  { label: 'Demarcación', url: 'https://images.unsplash.com/photo-1541888946425-d0fbb186a5b3?auto=format&fit=crop&w=600&q=80' }
+];
+
 export const CANCHAS_OPCIONES = [
   'Cancha Principal',
   'Faena Central - Pehuén',

@@ -3,6 +3,7 @@ import {
   addDoc, 
   getDocs, 
   deleteDoc, 
+  updateDoc,
   doc, 
   query, 
   orderBy 
@@ -152,6 +153,20 @@ export const eliminarReporte = async (id: string): Promise<void> => {
     await deleteDoc(doc(db, COLLECTION_NAME, id));
   } catch (error) {
     console.error('Error al eliminar reporte de Firestore:', error);
+    throw error;
+  }
+};
+
+export const actualizarReporte = async (id: string, datosAjustados: Partial<ReporteSeguridad>): Promise<void> => {
+  try {
+    if (id.startsWith('mock-') || id.startsWith('local-')) return;
+    const docRef = doc(db, COLLECTION_NAME, id);
+    if (datosAjustados.NombreEvaluador) {
+      datosAjustados.NombreEvaluador = datosAjustados.NombreEvaluador.trim().toUpperCase();
+    }
+    await updateDoc(docRef, datosAjustados);
+  } catch (error) {
+    console.error('Error al actualizar reporte en Firestore:', error);
     throw error;
   }
 };

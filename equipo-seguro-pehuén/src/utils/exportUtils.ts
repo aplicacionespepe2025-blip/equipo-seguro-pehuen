@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 import { ReporteSeguridad } from '../types';
 
 export const exportarReportesPDF = (
@@ -199,8 +200,9 @@ export const exportarReporteIndividualPDF = (r: ReporteSeguridad) => {
   const splitObs = doc.splitTextToSize(r.Observaciones || 'Sin observaciones adicionales.', 170);
   doc.text(splitObs, 18, 180);
 
-  // Sección 4: Adjuntar Imagen de Evidencia (Si existe)
-  if (r.Imagen) {
+  // Sección 4: Adjuntar Imagen de Evidencia (Si existe y el Estado de Cultura NO es 'A')
+  const esEstadoA = (r.EstadoCultura || '').toLowerCase() === 'a';
+  if (r.Imagen && !esEstadoA) {
     doc.setFillColor(236, 230, 200);
     doc.roundedRect(14, 194, 182, 70, 2, 2, 'F');
 
@@ -219,14 +221,50 @@ export const exportarReporteIndividualPDF = (r: ReporteSeguridad) => {
     }
   }
 
-  // SIN FIRMA NI TIMBRE (Eliminado a petición)
-
   // Pie de Página
   doc.setFontSize(8);
   doc.setTextColor(130, 120, 110);
   doc.text('Equipo Seguro Pehuén Ltda. - Documento Oficial de Gestión de Cultura de Seguridad', 105, 285, { align: 'center' });
 
   doc.save(`Evaluacion_${r.Id_Evento || 'Pehuen'}.pdf`);
+};
+
+export const exportarReportesExcel = (reportes: ReporteSeguridad[]) => {
+  const data = reportes.map((r, index) => ({
+    'Nº': index + 1,
+    'ID Evento': r.Id_Evento || '',
+    'Fecha': r.Fecha || '',
+    'Cancha / Ubicación': r.Cancha || '',
+    'Nombre Evaluador': (r.NombreEvaluador || '').toUpperCase(),
+    'Turno': r.Turno || '',
+    'Estado Cultura': (r.EstadoCultura || '').toUpperCase(),
+    '¿En qué fallamos?': r.EnQueFallamos || '',
+    '¿Cuál es nuestro compromiso?': r.CualEsNuestroCompromiso || '',
+    'Observaciones': r.Observaciones || '',
+    'Fecha y Hora Registro': r.FechaHoraRegistro || ''
+  }));
+
+  const worksheet = XLSX.utils.json_to_sheet(data);
+
+  // Ancho de columnas para visualización clara en Excel
+  worksheet['!cols'] = [
+    { wch: 6 },   // Nº
+    { wch: 20 },  // ID Evento
+    { wch: 14 },  // Fecha
+    { wch: 28 },  // Cancha
+    { wch: 32 },  // Evaluador
+    { wch: 14 },  // Turno
+    { wch: 16 },  // Estado
+    { wch: 45 },  // Fallamos
+    { wch: 45 },  // Compromiso
+    { wch: 35 },  // Observaciones
+    { wch: 22 }   // FechaHora
+  ];
+
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Reportes Cultura');
+
+  XLSX.writeFile(workbook, `Historico_Cultura_Seguridad_Pehuen_${new Date().toISOString().slice(0, 10)}.xlsx`);
 };
 
 export const exportarReportesCSV = (reportes: ReporteSeguridad[]) => {

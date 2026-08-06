@@ -23,19 +23,13 @@ import {
   TURNOS_OPCIONES, 
   ESTADOS_CULTURA_OPCIONES, 
   EstadoCulturaType, 
-  ReporteSeguridad 
+  ReporteSeguridad,
+  PRESET_SAMPLE_PHOTOS
 } from '../types';
 
 interface ReportFormProps {
   onSuccessSave: () => void;
 }
-
-const PRESET_SAMPLE_PHOTOS = [
-  { label: 'EHS Cancha 1', url: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=600&q=80' },
-  { label: 'EPP Taller', url: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?auto=format&fit=crop&w=600&q=80' },
-  { label: 'Inspección Faena', url: 'https://images.unsplash.com/photo-1581092335397-9583fe92d232?auto=format&fit=crop&w=600&q=80' },
-  { label: 'Demarcación', url: 'https://images.unsplash.com/photo-1541888946425-d0fbb186a5b3?auto=format&fit=crop&w=600&q=80' }
-];
 
 export const ReportForm: React.FC<ReportFormProps> = ({ onSuccessSave }) => {
   const { user } = useAuth();
@@ -62,7 +56,7 @@ export const ReportForm: React.FC<ReportFormProps> = ({ onSuccessSave }) => {
   const [enQueFallamos, setEnQueFallamos] = useState<string>('');
   const [cualEsNuestroCompromiso, setCualEsNuestroCompromiso] = useState<string>('');
   const [observaciones, setObservaciones] = useState<string>('');
-  const [imagen, setImagen] = useState<string>(PRESET_SAMPLE_PHOTOS[0].url);
+  const [imagen, setImagen] = useState<string>('');
   
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [showSuccessToast, setShowSuccessToast] = useState<boolean>(false);
@@ -136,7 +130,7 @@ export const ReportForm: React.FC<ReportFormProps> = ({ onSuccessSave }) => {
         EnQueFallamos: enQueFallamosValor,
         CualEsNuestroCompromiso: compromisoValor,
         Observaciones: observaciones.trim() || 'Sin observaciones adicionales.',
-        Imagen: imagen || PRESET_SAMPLE_PHOTOS[0].url,
+        Imagen: estadoCultura === 'a' ? '' : (imagen || ''),
         FechaHoraRegistro: fechaHoraFormatted,
         createdByUid: user?.uid,
         createdByEmail: user?.email

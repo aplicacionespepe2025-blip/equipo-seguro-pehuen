@@ -7,6 +7,7 @@ import {
   FileSpreadsheet, 
   FileText, 
   Eye, 
+  Pencil,
   Trash2, 
   RefreshCw, 
   AlertCircle, 
@@ -15,10 +16,11 @@ import {
   Sparkles
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { getReportes, eliminarReporte } from '../services/reportService';
-import { ReporteSeguridad, ESTADOS_CULTURA_OPCIONES, CANCHAS_OPCIONES, TURNOS_OPCIONES } from '../types';
-import { exportarReportesPDF, exportarReportesCSV, exportarReporteIndividualPDF } from '../utils/exportUtils';
+import { getReportes, eliminarReporte, actualizarReporte } from '../services/reportService';
+import { ReporteSeguridad, ESTADOS_CULTURA_OPCIONES, TURNOS_OPCIONES } from '../types';
+import { exportarReportesPDF, exportarReportesExcel, exportarReportesCSV, exportarReporteIndividualPDF } from '../utils/exportUtils';
 import { ReportDetailModal } from './ReportDetailModal';
+import { ReportEditModal } from './ReportEditModal';
 
 export const ReportHistory: React.FC = () => {
   const { user } = useAuth();
@@ -43,14 +45,14 @@ export const ReportHistory: React.FC = () => {
   const [fechaFin, setFechaFin] = useState<string>(getDefaultEndDate());
   const [evaluadorBusqueda, setEvaluadorBusqueda] = useState<string>(''); // Búsqueda en MAYÚSCULAS
   const [estadoCulturaFiltro, setEstadoCulturaFiltro] = useState<string>('TODOS');
-  const [canchaFiltro, setCanchaFiltro] = useState<string>('TODAS');
   const [turnoFiltro, setTurnoFiltro] = useState<string>('TODOS');
 
   // Vista de pantalla: 'grid' (tarjetas) o 'table' (tabla)
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
 
-  // Modal de Detalle
+  // Modales
   const [selectedReport, setSelectedReport] = useState<ReporteSeguridad | null>(null);
+  const [editingReport, setEditingReport] = useState<ReporteSeguridad | null>(null);
 
   // Cargar reportes desde Firestore
   const fetchReportesData = async () => {
@@ -82,7 +84,6 @@ export const ReportHistory: React.FC = () => {
     setFechaFin(getDefaultEndDate());
     setEvaluadorBusqueda('');
     setEstadoCulturaFiltro('TODOS');
-    setCanchaFiltro('TODAS');
     setTurnoFiltro('TODOS');
   };
 
@@ -128,29 +129,28 @@ export const ReportHistory: React.FC = () => {
         }
       }
 
-      // 4. Filtro por Cancha
-      if (canchaFiltro !== 'TODAS') {
-        if (r.Cancha !== canchaFiltro) return false;
-      }
-
-      // 5. Filtro por Turno (Turno 1, Turno 2, Turno 3)
+      // 4. Filtro por Turno (Turno 1, Turno 2, Turno 3)
       if (turnoFiltro !== 'TODOS') {
         if (r.Turno !== turnoFiltro) return false;
       }
 
       return true;
     });
-  }, [reportes, fechaInicio, fechaFin, evaluadorBusqueda, estadoCulturaFiltro, canchaFiltro, turnoFiltro, user]);
+  }, [reportes, fechaInicio, fechaFin, evaluadorBusqueda, estadoCulturaFiltro, turnoFiltro, user]);
 
-  // Manejo de eliminación (Solo ADMINISTRADOR)
+  // Manejo de edicion de reporte
+  const handleSaveEdit = async (updatedData: Partial<ReporteSeguridad>) => {
+    if (!editingReport?.id) return;
+    await actualizarReporte(editingReport.id, updatedData);
+    setReportes((prev) =>
+      prev.map((r) => (r.id === editingReport.id ? { ...r, ...updatedData } : r))
+    );
+  };
+
+  // Manejo de eliminación
   const handleDelete = async (id?: string) => {
     if (!id) return;
-    if (user?.role !== 'ADMINISTRADOR') {
-      alert('Acceso Denegado: Solo el perfil ADMINISTRADOR puede eliminar registros.');
-      return;
-    }
-
-    if (window.confirm('¿Está seguro de que desea eliminar este reporte permanentemente de Firestore?')) {
+    if (window.confirm('¿Está seguro de que desea eliminar este reporte permanentemente?')) {
       try {
         await eliminarReporte(id);
         setReportes((prev) => prev.filter((item) => item.id !== id));
@@ -184,6 +184,15 @@ export const ReportHistory: React.FC = () => {
         />
       )}
 
+      {/* Edit Modal */}
+      {editingReport && (
+        <ReportEditModal
+          reporte={editingReport}
+          onClose={() => setEditingReport(null)}
+          onSave={handleSaveEdit}
+        />
+      )}
+
       {/* Encabezado Principal - Theme Pehuén */}
       <div className="bg-[#676057] text-[#F2EDC9] rounded-2xl p-6 shadow-xl flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 border border-[#80776D]">
         <div>
@@ -205,6 +214,15 @@ export const ReportHistory: React.FC = () => {
         {/* Acciones de Exportación Global */}
         <div className="flex flex-wrap items-center gap-2">
           
+          <button
+            onClick={() => exportarReportesExcel(reportesFiltrados)}
+            disabled={reportesFiltrados.length === 0}
+            className="bg-[#BCB703] hover:bg-[#8A8602] text-[#3E3933] disabled:opacity-50 font-heading font-bold text-xs px-4 py-2.5 rounded-xl shadow-md flex items-center space-x-2 transition-all cursor-pointer"
+          >
+            <FileSpreadsheet className="w-4 h-4 text-[#3E3933]" />
+            <span>EXPORTAR EXCEL (.XLSX)</span>
+          </button>
+
           <button
             onClick={() => exportarReportesPDF(reportesFiltrados, `${fechaInicio || 'Inicio'} a ${fechaFin || 'Fin'}`)}
             disabled={reportesFiltrados.length === 0}
@@ -346,22 +364,8 @@ export const ReportHistory: React.FC = () => {
 
         </div>
 
-        {/* Selector adicional de Cancha y Modo de Vista */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-[#D1CB9E] text-xs">
-          <div className="flex items-center space-x-3">
-            <span className="text-[#676057] font-bold">Filtrar Cancha:</span>
-            <select
-              value={canchaFiltro}
-              onChange={(e) => setCanchaFiltro(e.target.value)}
-              className="bg-[#FAF8EA] border border-[#D1CB9E] text-[#3E3933] font-semibold rounded-lg px-2.5 py-1 text-xs focus:ring-1 focus:ring-[#BCB703]"
-            >
-              <option value="TODAS">Todas las Canchas</option>
-              {CANCHAS_OPCIONES.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-          </div>
-
+        {/* Selector de Modo de Vista */}
+        <div className="flex flex-wrap items-center justify-end gap-3 pt-2 border-t border-[#D1CB9E] text-xs">
           <div className="flex items-center space-x-1 bg-[#EFEAD0] p-1 rounded-xl border border-[#D1CB9E]">
             <button
               onClick={() => setViewMode('grid')}
@@ -433,7 +437,7 @@ export const ReportHistory: React.FC = () => {
                   
                   {/* Foto previa + Overlay de ID */}
                   <div className="relative h-44 bg-[#3E3933] overflow-hidden group">
-                    {r.Imagen ? (
+                    {r.Imagen && (r.EstadoCultura || '').toLowerCase() !== 'a' ? (
                       <img
                         src={r.Imagen}
                         alt="Foto Reporte"
@@ -503,13 +507,22 @@ export const ReportHistory: React.FC = () => {
                 </div>
 
                 {/* Acciones de Tarjeta */}
-                <div className="p-4 bg-[#EFEAD0] border-t border-[#D1CB9E] flex items-center justify-between gap-2">
+                <div className="p-3 bg-[#EFEAD0] border-t border-[#D1CB9E] flex items-center justify-between gap-1.5">
                   <button
                     onClick={() => setSelectedReport(r)}
-                    className="flex-1 bg-[#676057] hover:bg-[#3E3933] text-[#F2EDC9] text-xs font-bold py-2 px-3 rounded-xl flex items-center justify-center space-x-1.5 transition-colors cursor-pointer"
+                    className="flex-1 bg-[#676057] hover:bg-[#3E3933] text-[#F2EDC9] text-xs font-bold py-2 px-2.5 rounded-xl flex items-center justify-center space-x-1 transition-colors cursor-pointer"
                   >
                     <Eye className="w-3.5 h-3.5 text-[#BCB703]" />
-                    <span>Ver Detalle</span>
+                    <span>Ver</span>
+                  </button>
+
+                  <button
+                    onClick={() => setEditingReport(r)}
+                    title="Editar Registro"
+                    className="p-2 bg-[#FAF8EA] hover:bg-[#BCB703]/20 text-[#3E3933] font-bold rounded-xl border border-[#D1CB9E] transition-colors cursor-pointer flex items-center space-x-1 text-xs"
+                  >
+                    <Pencil className="w-3.5 h-3.5 text-[#8A8602]" />
+                    <span>Editar</span>
                   </button>
 
                   <button
@@ -520,15 +533,13 @@ export const ReportHistory: React.FC = () => {
                     <FileText className="w-4 h-4" />
                   </button>
 
-                  {user?.role === 'ADMINISTRADOR' && (
-                    <button
-                      onClick={() => handleDelete(r.id)}
-                      title="Eliminar de Firestore (Solo Admin)"
-                      className="p-2 bg-[#FAF8EA] hover:bg-red-100 text-[#D37608] rounded-xl border border-[#D1CB9E] transition-colors cursor-pointer"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  )}
+                  <button
+                    onClick={() => handleDelete(r.id)}
+                    title="Eliminar Registro"
+                    className="p-2 bg-[#FAF8EA] hover:bg-red-100 text-[#D37608] rounded-xl border border-[#D1CB9E] transition-colors cursor-pointer"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
 
               </div>
@@ -579,21 +590,26 @@ export const ReportHistory: React.FC = () => {
                             <Eye className="w-4 h-4" />
                           </button>
                           <button
+                            onClick={() => setEditingReport(r)}
+                            title="Editar Registro"
+                            className="p-1.5 text-[#8A8602] hover:bg-[#FAF8EA] rounded-lg cursor-pointer flex items-center space-x-1 text-xs font-bold"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button
                             onClick={() => exportarReporteIndividualPDF(r)}
                             title="PDF Individual"
-                            className="p-1.5 text-[#8A8602] hover:bg-[#FAF8EA] rounded-lg cursor-pointer"
+                            className="p-1.5 text-[#676057] hover:bg-[#FAF8EA] rounded-lg cursor-pointer"
                           >
                             <FileText className="w-4 h-4" />
                           </button>
-                          {user?.role === 'ADMINISTRADOR' && (
-                            <button
-                              onClick={() => handleDelete(r.id)}
-                              title="Eliminar"
-                              className="p-1.5 text-[#D37608] hover:bg-[#FAF8EA] rounded-lg cursor-pointer"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          )}
+                          <button
+                            onClick={() => handleDelete(r.id)}
+                            title="Eliminar Registro"
+                            className="p-1.5 text-[#D37608] hover:bg-red-100 rounded-lg cursor-pointer"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
                       </td>
                     </tr>
