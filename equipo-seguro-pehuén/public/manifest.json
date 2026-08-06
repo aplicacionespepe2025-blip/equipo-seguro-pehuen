@@ -1,0 +1,21 @@
+{
+  "short_name": "Equipo Seg Pehuen",
+  "name": "Equipo Seguro Pehuén Ltda.",
+  "icons": [
+    {
+      "src": "https://img.icons8.com/color/192/shield.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://img.icons8.com/color/512/shield.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#676057",
+  "theme_color": "#676057",
+  "display": "standalone",
+  "orientation": "portrait"
+}
