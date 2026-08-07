@@ -455,26 +455,7 @@ export const ReportForm: React.FC<ReportFormProps> = ({ onSuccessSave }) => {
                 </label>
               </div>
 
-              {/* Selector de fotos de demostración rápidas */}
-              <div className="pt-2">
-                <label className="text-[11px] font-bold text-[#676057] mb-2 block">
-                  O elige una foto de muestra rápida:
-                </label>
-                <div className="grid grid-cols-4 gap-2">
-                  {PRESET_SAMPLE_PHOTOS.map((photo, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => setImagen(photo.url)}
-                      className={`relative rounded-lg overflow-hidden border-2 h-14 ${
-                        imagen === photo.url ? 'border-[#BCB703] ring-2 ring-[#BCB703]' : 'border-[#D1CB9E] opacity-70 hover:opacity-100'
-                      }`}
-                    >
-                      <img src={photo.url} alt={photo.label} className="w-full h-full object-cover" />
-                    </button>
-                  ))}
-                </div>
-              </div>
+
             </div>
 
             {/* Vista Previa de Imagen */}

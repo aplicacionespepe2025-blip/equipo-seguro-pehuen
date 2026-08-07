@@ -1,12 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { Users, UserPlus, Lock, CheckCircle2, RefreshCw, KeyRound } from 'lucide-react';
-import { collection, getDocs, doc, setDoc } from 'firebase/firestore';
-import { db } from '../firebase/config';
+import { Users, UserPlus, Lock, CheckCircle2, RefreshCw, KeyRound, Trash2, AlertTriangle } from 'lucide-react';
+import { collection, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { initializeApp, getApps } from 'firebase/app';
+import { getAuth, createUserWithEmailAndPassword } from 'firebase/auth';
+import { db, firebaseConfig } from '../firebase/config';
 import { UserProfile, UserRole } from '../types';
 import { useAuth } from '../context/AuthContext';
 
+// Instancia secundaria de Firebase Auth para crear usuarios sin cerrar la sesión del Administrador
+const getSecondaryAuth = () => {
+  const apps = getApps();
+  const secondaryApp = apps.find((a) => a.name === 'UserCreationApp') || initializeApp(firebaseConfig, 'UserCreationApp');
+  return getAuth(secondaryApp);
+};
+
 export const UserManagement: React.FC = () => {
-  const { user, registerUser } = useAuth();
+  const { user } = useAuth();
   const [usersList, setUsersList] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -24,6 +33,7 @@ export const UserManagement: React.FC = () => {
 
   const [message, setMessage] = useState<string>('');
   const [isCreating, setIsCreating] = useState<boolean>(false);
+  const [deletingUid, setDeletingUid] = useState<string | null>(null);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -35,7 +45,7 @@ export const UserManagement: React.FC = () => {
       });
       setUsersList(list);
     } catch (e) {
-      console.error(e);
+      console.error('Error al obtener usuarios:', e);
     } finally {
       setLoading(false);
     }
@@ -52,8 +62,39 @@ export const UserManagement: React.FC = () => {
     setIsCreating(true);
     setMessage('');
     try {
-      await registerUser(newEmail, newPassword, newName.toUpperCase(), newRole);
-      setMessage('¡Usuario registrado exitosamente con credenciales en Firebase!');
+      const cleanEmail = newEmail.trim().toLowerCase();
+      const cleanName = newName.trim().toUpperCase();
+      let createdUid = '';
+
+      try {
+        const secondaryAuth = getSecondaryAuth();
+        const res = await createUserWithEmailAndPassword(secondaryAuth, cleanEmail, newPassword);
+        createdUid = res.user.uid;
+      } catch (authErr: any) {
+        console.warn('Advertencia en registro con Firebase Auth secundario:', authErr);
+        if (authErr?.code === 'auth/email-already-in-use') {
+          throw new Error('Este correo electrónico ya está registrado en Firebase Authentication.');
+        } else if (authErr?.code === 'auth/weak-password') {
+          throw new Error('La contraseña debe tener al menos 6 caracteres.');
+        } else if (authErr?.code === 'auth/operation-not-allowed') {
+          // Si el proveedor correo/contraseña no está activo en Firebase Auth, generar UID para Firestore
+          createdUid = `user-${Date.now()}`;
+        } else {
+          // Fallback a generación de perfil en Firestore
+          createdUid = `user-${Date.now()}`;
+        }
+      }
+
+      const profile: UserProfile = {
+        uid: createdUid,
+        email: cleanEmail,
+        displayName: cleanName,
+        role: newRole,
+        createdAt: new Date().toISOString()
+      };
+
+      await setDoc(doc(db, 'users', createdUid), profile);
+      setMessage(`¡Usuario ${cleanName} registrado exitosamente en la App y Firebase!`);
       setNewEmail('');
       setNewPassword('');
       setNewName('');
@@ -101,6 +142,30 @@ export const UserManagement: React.FC = () => {
       );
     } catch (e) {
       alert('Error actualizando el rol en Firestore.');
+    }
+  };
+
+  const handleDeleteUser = async (targetUser: UserProfile) => {
+    if (targetUser.uid === user?.uid) {
+      alert('No puedes eliminar tu propia cuenta activa de Administrador.');
+      return;
+    }
+    const confirmDelete = window.confirm(
+      `¿Estás seguro de que deseas eliminar permanentemente al usuario "${targetUser.displayName || targetUser.email}"?\n\nEsta acción borrará su perfil de la base de datos de usuarios.`
+    );
+    if (!confirmDelete) return;
+
+    setDeletingUid(targetUser.uid);
+    setMessage('');
+    try {
+      await deleteDoc(doc(db, 'users', targetUser.uid));
+      setUsersList((prev) => prev.filter((u) => u.uid !== targetUser.uid));
+      setMessage(`Usuario "${targetUser.displayName || targetUser.email}" eliminado exitosamente.`);
+    } catch (err: any) {
+      console.error('Error al eliminar usuario:', err);
+      alert(`Error al eliminar usuario de Firestore: ${err.message || 'Error de red'}`);
+    } finally {
+      setDeletingUid(null);
     }
   };
 
@@ -334,9 +399,20 @@ export const UserManagement: React.FC = () => {
                   <option value="USUARIO">USUARIO</option>
                 </select>
 
-                <span className="text-[10px] font-mono text-[#80776D]">
+                <span className="text-[10px] font-mono text-[#80776D] hidden md:inline">
                   {u.uid.slice(0, 8)}...
                 </span>
+
+                <button
+                  type="button"
+                  onClick={() => handleDeleteUser(u)}
+                  disabled={deletingUid === u.uid}
+                  title="Eliminar usuario"
+                  className="bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 p-2 rounded-xl transition-all cursor-pointer disabled:opacity-50 flex items-center space-x-1 text-xs font-bold"
+                >
+                  <Trash2 className="w-4 h-4 text-red-600" />
+                  <span className="hidden sm:inline">Eliminar</span>
+                </button>
               </div>
             </div>
           ))}

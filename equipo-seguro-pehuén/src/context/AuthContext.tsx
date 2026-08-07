@@ -47,19 +47,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const newProfile: UserProfile = {
               uid: fUser.uid,
               email: fUser.email || `${fUser.uid.substring(0, 6)}@pehuen.cl`,
-              displayName: fUser.displayName || 'EVALUADOR EN TERRENO',
+              displayName: (fUser.displayName || fUser.email?.split('@')[0] || 'EVALUADOR PEHUÉN').toUpperCase(),
               role: 'SUPERVISOR',
               createdAt: new Date().toISOString()
             };
             await setDoc(userDocRef, newProfile);
-            setUser(newProfile);
+            setUser((prev) => (prev?.uid === fUser.uid ? prev : newProfile));
           }
         } catch (err) {
           console.warn('Error al cargar perfil de usuario en Firestore, usando perfil local:', err);
           setUser({
             uid: fUser.uid,
             email: fUser.email || 'usuario@pehuen.cl',
-            displayName: fUser.displayName || 'OPERADOR PEHUÉN',
+            displayName: (fUser.displayName || fUser.email?.split('@')[0] || 'OPERADOR PEHUÉN').toUpperCase(),
             role: 'SUPERVISOR'
           });
         }

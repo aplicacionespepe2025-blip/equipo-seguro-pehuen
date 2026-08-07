@@ -249,19 +249,7 @@ export const ReportEditModal: React.FC<ReportEditModalProps> = ({
                 />
               </div>
 
-              {/* Botones de presets */}
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {PRESET_SAMPLE_PHOTOS.map((p, idx) => (
-                  <button
-                    type="button"
-                    key={idx}
-                    onClick={() => setImagen(p.url)}
-                    className="text-[10px] bg-[#EFEAD0] hover:bg-[#BCB703] text-[#3E3933] px-2 py-1 rounded-lg border border-[#D1CB9E] font-bold transition-all cursor-pointer"
-                  >
-                    Muestra {idx + 1}
-                  </button>
-                ))}
-              </div>
+
 
               {imagen && (
                 <div className="mt-2 h-32 w-full rounded-xl overflow-hidden border border-[#D1CB9E]">

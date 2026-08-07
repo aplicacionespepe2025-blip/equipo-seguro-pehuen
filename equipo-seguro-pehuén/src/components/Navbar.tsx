@@ -10,7 +10,7 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, openAuthModal }) => {
-  const { user, logout, switchRoleQuick, quickDemoLogin } = useAuth();
+  const { user, logout } = useAuth();
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [showPwaModal, setShowPwaModal] = useState<boolean>(false);
 
@@ -153,43 +153,12 @@ export const Navbar: React.FC<NavbarProps> = ({ currentTab, setCurrentTab, openA
                   <div className="text-[10px] text-[#D1CB9E]">{user.email}</div>
                 </div>
 
-                {/* Badge de Rol Interactivo / Selector de Prueba */}
-                <div className="relative group">
-                  <span className={`text-[11px] px-2.5 py-1 rounded-lg border ${getRoleBadgeColor(user.role)} flex items-center space-x-1 cursor-pointer`}>
+                {/* Badge de Rol Fijo del Usuario */}
+                <div>
+                  <span className={`text-[11px] px-2.5 py-1 rounded-lg border ${getRoleBadgeColor(user.role)} flex items-center space-x-1`}>
                     <Lock className="w-3 h-3 text-[#3E3933]" />
                     <span>{user.role}</span>
                   </span>
-
-                  {/* Dropdown flotante de cambio rápido de rol para testing */}
-                  <div className="absolute right-0 top-full mt-2 w-48 bg-[#3E3933] border border-[#80776D] rounded-xl shadow-2xl p-2 hidden group-hover:block z-50">
-                    <p className="text-[10px] font-bold text-[#D1CB9E] px-2 py-1 uppercase tracking-wider">
-                      Cambiar Rol
-                    </p>
-                    <button
-                      onClick={() => switchRoleQuick('ADMINISTRADOR')}
-                      className={`w-full text-left px-2 py-1.5 rounded-lg text-xs font-bold ${
-                        user.role === 'ADMINISTRADOR' ? 'bg-[#BCB703] text-[#3E3933]' : 'text-[#F2EDC9] hover:bg-[#676057]'
-                      }`}
-                    >
-                      👑 ADMINISTRADOR
-                    </button>
-                    <button
-                      onClick={() => switchRoleQuick('SUPERVISOR')}
-                      className={`w-full text-left px-2 py-1.5 rounded-lg text-xs font-bold ${
-                        user.role === 'SUPERVISOR' ? 'bg-[#BCB703] text-[#3E3933]' : 'text-[#F2EDC9] hover:bg-[#676057]'
-                      }`}
-                    >
-                      🛡️ SUPERVISOR
-                    </button>
-                    <button
-                      onClick={() => switchRoleQuick('USUARIO')}
-                      className={`w-full text-left px-2 py-1.5 rounded-lg text-xs font-bold ${
-                        user.role === 'USUARIO' ? 'bg-[#BCB703] text-[#3E3933]' : 'text-[#F2EDC9] hover:bg-[#676057]'
-                      }`}
-                    >
-                      👷 USUARIO
-                    </button>
-                  </div>
                 </div>
 
                 <button

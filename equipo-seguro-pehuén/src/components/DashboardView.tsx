@@ -7,14 +7,24 @@ import {
   MapPin, 
   Users, 
   RefreshCw,
-  Sparkles
+  Sparkles,
+  Calendar,
+  Filter,
+  Clock
 } from 'lucide-react';
 import { getReportes } from '../services/reportService';
 import { ReporteSeguridad, ESTADOS_CULTURA_OPCIONES } from '../types';
 
+type PresetFilter = 'todos' | 'semana' | 'mes' | '30dias' | 'personalizado';
+
 export const DashboardView: React.FC = () => {
   const [reportes, setReportes] = useState<ReporteSeguridad[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+
+  // Filtros de Rango de Fecha
+  const [preset, setPreset] = useState<PresetFilter>('todos');
+  const [fechaInicio, setFechaInicio] = useState<string>('');
+  const [fechaFin, setFechaFin] = useState<string>('');
 
   const fetchStats = async () => {
     setLoading(true);
@@ -32,8 +42,60 @@ export const DashboardView: React.FC = () => {
     fetchStats();
   }, []);
 
-  // Cálculos métricos
-  const total = reportes.length;
+  // Función para formatear YYYY-MM-DD
+  const formatDateStr = (d: Date): string => {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  // Manejador de botones de Presets de fecha
+  const handleSelectPreset = (p: PresetFilter) => {
+    setPreset(p);
+    const now = new Date();
+
+    if (p === 'todos') {
+      setFechaInicio('');
+      setFechaFin('');
+    } else if (p === 'semana') {
+      const pastWeek = new Date();
+      pastWeek.setDate(now.getDate() - 7);
+      setFechaInicio(formatDateStr(pastWeek));
+      setFechaFin(formatDateStr(now));
+    } else if (p === 'mes') {
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      setFechaInicio(formatDateStr(startOfMonth));
+      setFechaFin(formatDateStr(now));
+    } else if (p === '30dias') {
+      const past30 = new Date();
+      past30.setDate(now.getDate() - 30);
+      setFechaInicio(formatDateStr(past30));
+      setFechaFin(formatDateStr(now));
+    } else if (p === 'personalizado') {
+      if (!fechaInicio) {
+        const pastWeek = new Date();
+        pastWeek.setDate(now.getDate() - 7);
+        setFechaInicio(formatDateStr(pastWeek));
+      }
+      if (!fechaFin) {
+        setFechaFin(formatDateStr(now));
+      }
+    }
+  };
+
+  // Reportes filtrados por el rango de fechas
+  const filteredReportes = useMemo(() => {
+    return reportes.filter((r) => {
+      if (!r.Fecha) return true;
+      if (fechaInicio && r.Fecha < fechaInicio) return false;
+      if (fechaFin && r.Fecha > fechaFin) return false;
+      return true;
+    });
+  }, [reportes, fechaInicio, fechaFin]);
+
+  // Cálculos métricos sobre los reportes filtrados
+  const total = filteredReportes.length;
 
   const culturaCounts = useMemo(() => {
     const counts: Record<string, number> = {
@@ -42,7 +104,7 @@ export const DashboardView: React.FC = () => {
       c: 0
     };
 
-    reportes.forEach((r) => {
+    filteredReportes.forEach((r) => {
       const key = (r.EstadoCultura || 'a').toLowerCase();
       if (counts[key] !== undefined) {
         counts[key]++;
@@ -52,7 +114,7 @@ export const DashboardView: React.FC = () => {
     });
 
     return counts;
-  }, [reportes]);
+  }, [filteredReportes]);
 
   const estadoA = culturaCounts['a'] || 0;
   const estadoB = culturaCounts['b'] || 0;
@@ -65,27 +127,27 @@ export const DashboardView: React.FC = () => {
   // Canchas con más evaluaciones
   const canchasCounts = useMemo(() => {
     const map: Record<string, number> = {};
-    reportes.forEach((r) => {
+    filteredReportes.forEach((r) => {
       map[r.Cancha] = (map[r.Cancha] || 0) + 1;
     });
     return Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 5);
-  }, [reportes]);
+  }, [filteredReportes]);
 
   // Top Evaluadores en Mayúsculas
   const evaluadoresTop = useMemo(() => {
     const map: Record<string, number> = {};
-    reportes.forEach((r) => {
+    filteredReportes.forEach((r) => {
       const name = (r.NombreEvaluador || 'N/A').toUpperCase();
       map[name] = (map[name] || 0) + 1;
     });
     return Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 5);
-  }, [reportes]);
+  }, [filteredReportes]);
 
   return (
     <div className="space-y-6">
 
       {/* Header Banner - Coffee Palette */}
-      <div className="bg-[#676057] text-[#F2EDC9] rounded-2xl p-6 shadow-xl flex items-center justify-between border border-[#80776D]">
+      <div className="bg-[#676057] text-[#F2EDC9] rounded-2xl p-6 shadow-xl flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border border-[#80776D]">
         <div>
           <div className="flex items-center space-x-2 text-[#BCB703] text-xs font-bold uppercase tracking-wider mb-1">
             <BarChart3 className="w-4 h-4 text-[#BCB703]" />
@@ -95,16 +157,139 @@ export const DashboardView: React.FC = () => {
             Dashboard de Cultura y Seguridad Pehuén
           </h1>
           <p className="text-xs text-[#D1CB9E] mt-1">
-            Métricas clave de desempeño, madurez de cultura organizacional (a, b, c) y focos de atención.
+            Métricas clave de desempeño, madurez de cultura organizacional (a, b, c) y avances semanales o mensuales.
           </p>
         </div>
 
         <button
           onClick={fetchStats}
-          className="bg-[#3E3933] hover:bg-[#282420] text-[#F2EDC9] p-2.5 rounded-xl border border-[#80776D] transition-colors cursor-pointer"
+          className="bg-[#3E3933] hover:bg-[#282420] text-[#F2EDC9] p-2.5 rounded-xl border border-[#80776D] transition-colors cursor-pointer self-end md:self-auto"
         >
           <RefreshCw className={`w-4 h-4 text-[#BCB703] ${loading ? 'animate-spin' : ''}`} />
         </button>
+      </div>
+
+      {/* Barra de Filtro por Rango de Fecha (Semanal / Mensual / Rango Personalizado) */}
+      <div className="bg-[#FAF8EA] border border-[#D1CB9E] rounded-2xl p-5 shadow-sm space-y-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-[#D1CB9E] pb-3">
+          <div className="flex items-center space-x-2">
+            <Calendar className="w-5 h-5 text-[#8A8602]" />
+            <h3 className="font-heading font-bold text-sm text-[#3E3933] uppercase tracking-wider">
+              Filtro por Rango de Fecha / Avances
+            </h3>
+          </div>
+
+          <div className="text-xs font-bold text-[#676057]">
+            Mostrando <span className="text-[#3E3933] font-mono font-bold text-sm">{filteredReportes.length}</span> de {reportes.length} evaluaciones
+          </div>
+        </div>
+
+        {/* Botones de Presets de Fecha */}
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => handleSelectPreset('todos')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+              preset === 'todos'
+                ? 'bg-[#676057] text-[#F2EDC9] border-[#3E3933] shadow-md'
+                : 'bg-[#FAF8EA] text-[#676057] border-[#D1CB9E] hover:bg-[#EFEAD0]'
+            }`}
+          >
+            Todas las Fechas
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleSelectPreset('semana')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border flex items-center space-x-1.5 ${
+              preset === 'semana'
+                ? 'bg-[#676057] text-[#F2EDC9] border-[#3E3933] shadow-md'
+                : 'bg-[#FAF8EA] text-[#676057] border-[#D1CB9E] hover:bg-[#EFEAD0]'
+            }`}
+          >
+            <Clock className="w-3.5 h-3.5 text-[#BCB703]" />
+            <span>Esta Semana (7 Días)</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleSelectPreset('mes')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border flex items-center space-x-1.5 ${
+              preset === 'mes'
+                ? 'bg-[#676057] text-[#F2EDC9] border-[#3E3933] shadow-md'
+                : 'bg-[#FAF8EA] text-[#676057] border-[#D1CB9E] hover:bg-[#EFEAD0]'
+            }`}
+          >
+            <Calendar className="w-3.5 h-3.5 text-[#BCB703]" />
+            <span>Este Mes</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleSelectPreset('30dias')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
+              preset === '30dias'
+                ? 'bg-[#676057] text-[#F2EDC9] border-[#3E3933] shadow-md'
+                : 'bg-[#FAF8EA] text-[#676057] border-[#D1CB9E] hover:bg-[#EFEAD0]'
+            }`}
+          >
+            Últimos 30 Días
+          </button>
+
+          <button
+            type="button"
+            onClick={() => handleSelectPreset('personalizado')}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border flex items-center space-x-1.5 ${
+              preset === 'personalizado'
+                ? 'bg-[#676057] text-[#F2EDC9] border-[#3E3933] shadow-md'
+                : 'bg-[#FAF8EA] text-[#676057] border-[#D1CB9E] hover:bg-[#EFEAD0]'
+            }`}
+          >
+            <Filter className="w-3.5 h-3.5 text-[#BCB703]" />
+            <span>Rango Personalizado</span>
+          </button>
+        </div>
+
+        {/* Inputs de Fechas Personalizadas o Detalle Activo */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 pt-1 items-end">
+          <div>
+            <label className="text-[11px] font-bold text-[#676057] block mb-1">Fecha Desde</label>
+            <input
+              type="date"
+              value={fechaInicio}
+              onChange={(e) => {
+                setFechaInicio(e.target.value);
+                setPreset('personalizado');
+              }}
+              className="w-full bg-[#FAF8EA] border border-[#D1CB9E] text-[#3E3933] font-mono font-bold text-xs rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#BCB703]"
+            />
+          </div>
+
+          <div>
+            <label className="text-[11px] font-bold text-[#676057] block mb-1">Fecha Hasta</label>
+            <input
+              type="date"
+              value={fechaFin}
+              onChange={(e) => {
+                setFechaFin(e.target.value);
+                setPreset('personalizado');
+              }}
+              className="w-full bg-[#FAF8EA] border border-[#D1CB9E] text-[#3E3933] font-mono font-bold text-xs rounded-xl px-3 py-2 focus:ring-2 focus:ring-[#BCB703]"
+            />
+          </div>
+
+          {(fechaInicio || fechaFin) && (
+            <div>
+              <button
+                type="button"
+                onClick={() => handleSelectPreset('todos')}
+                className="w-full bg-[#EFEAD0] hover:bg-[#D1CB9E] text-[#3E3933] text-xs font-bold py-2 rounded-xl border border-[#D1CB9E] transition-colors cursor-pointer"
+              >
+                Limpiar Filtros de Fecha
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* KPI Cards Grid */}
