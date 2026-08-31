@@ -1,0 +1,6 @@
+{
+  "name": "Equipo Seguro Pehuén",
+  "description": "Aplicación de gestión de cultura y seguridad en terreno para Equipo Seguro Pehuén Ltda.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

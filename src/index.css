@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --color-cafe: #676057;
+    --color-cafe-dark: #3E3933;
+    --color-cafe-light: #80776D;
+    --color-verde: #BCB703;
+    --color-verde-dark: #8A8602;
+    --color-naranja: #D37608;
+    --color-naranja-dark: #A85A02;
+    --color-beige: #F2EDC9;
+    --color-cream: #FAF8EA;
+    --color-cream-card: #EFEAD0;
+  }
+
+  body {
+    background-color: #F2EDC9;
+    color: #3E3933;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6, .font-heading {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+  }
+}
+
+/* Custom utility colors */
+.bg-brand-cafe { background-color: #676057; }
+.bg-brand-cafe-dark { background-color: #3E3933; }
+.bg-brand-verde { background-color: #BCB703; }
+.bg-brand-naranja { background-color: #D37608; }
+.bg-brand-beige { background-color: #F2EDC9; }
+.bg-brand-cream { background-color: #FAF8EA; }
+.bg-brand-cream-card { background-color: #E6E0BD; }
+
+.text-brand-cafe { color: #676057; }
+.text-brand-cafe-dark { color: #3E3933; }
+.text-brand-verde { color: #8A8602; }
+.text-brand-naranja { color: #D37608; }
+.text-brand-beige { color: #F2EDC9; }
+
+.border-brand-cafe { border-color: #676057; }
+.border-brand-verde { border-color: #BCB703; }
+.border-brand-naranja { border-color: #D37608; }
+.border-brand-beige { border-color: #D1CB9E; }
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #E8E2BF;
+}
+::-webkit-scrollbar-thumb {
+  background: #80776D;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #676057;
+}
