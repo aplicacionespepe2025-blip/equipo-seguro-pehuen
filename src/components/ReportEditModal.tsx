@@ -26,6 +26,7 @@ export const ReportEditModal: React.FC<ReportEditModalProps> = ({
   const [nombreEvaluador, setNombreEvaluador] = useState<string>(reporte.NombreEvaluador || '');
   const [nombreReceptor, setNombreReceptor] = useState<string>(reporte.NombreReceptor || '');
   const [fecha, setFecha] = useState<string>(reporte.Fecha || '');
+  const [fechaHoraRegistro, setFechaHoraRegistro] = useState<string>(reporte.FechaHoraRegistro || '');
   const [cancha, setCancha] = useState<string>(reporte.Cancha || CANCHAS_OPCIONES[0]);
   const [turno, setTurno] = useState<string>(reporte.Turno || TURNOS_OPCIONES[0]);
   const [estadoCultura, setEstadoCultura] = useState<'a' | 'b' | 'c'>(
@@ -59,6 +60,7 @@ export const ReportEditModal: React.FC<ReportEditModalProps> = ({
         NombreEvaluador: nombreEvaluador.trim().toUpperCase(),
         NombreReceptor: nombreReceptor.trim().toUpperCase(),
         Fecha: fecha,
+        FechaHoraRegistro: fechaHoraRegistro.trim() || reporte.FechaHoraRegistro,
         Cancha: cancha,
         Turno: turno,
         EstadoCultura: estadoCultura,
@@ -154,6 +156,19 @@ export const ReportEditModal: React.FC<ReportEditModalProps> = ({
                 value={fecha}
                 onChange={(e) => setFecha(e.target.value)}
                 className="w-full bg-[#FAF8EA] border border-[#D1CB9E] rounded-xl px-3 py-2 text-xs text-[#3E3933] font-medium focus:ring-2 focus:ring-[#BCB703]"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-[#676057]">
+                Fecha y Hora de Registro (YYYY-MM-DD HH:mm:ss)
+              </label>
+              <input
+                type="text"
+                value={fechaHoraRegistro}
+                onChange={(e) => setFechaHoraRegistro(e.target.value)}
+                placeholder="Ej. 2026-09-01 22:52:52"
+                className="w-full bg-[#FAF8EA] border border-[#D1CB9E] rounded-xl px-3 py-2 text-xs font-mono text-[#3E3933] font-bold focus:ring-2 focus:ring-[#BCB703]"
               />
             </div>
           </div>

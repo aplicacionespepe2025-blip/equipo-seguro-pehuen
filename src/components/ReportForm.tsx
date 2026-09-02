@@ -34,21 +34,35 @@ interface ReportFormProps {
 export const ReportForm: React.FC<ReportFormProps> = ({ onSuccessSave }) => {
   const { user } = useAuth();
 
-  // Generar ID de Evento único automático (ej. PEH-2026-0806-001)
+  // Generar ID de Evento único automático con fecha local
   const generateNewEventId = () => {
     const today = new Date();
-    const dateStr = today.toISOString().slice(0, 10).replace(/-/g, '');
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    const dateStr = `${year}${month}${day}`;
     const randNum = Math.floor(100 + Math.random() * 900);
     return `PEH-${dateStr}-${randNum}`;
   };
 
-  // Obtener fecha actual del sistema en formato YYYY-MM-DD
+  // Obtener fecha actual del sistema en formato YYYY-MM-DD (Hora local)
   const getTodayDateStr = () => {
     const d = new Date();
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
+  };
+
+  // Obtener fecha y hora completa en formato YYYY-MM-DD HH:mm:ss (Hora local)
+  const getLocalDateTimeFormatted = (d: Date = new Date()) => {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    const seconds = String(d.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   };
 
   const todayDateStr = getTodayDateStr();
@@ -135,8 +149,7 @@ export const ReportForm: React.FC<ReportFormProps> = ({ onSuccessSave }) => {
     setIsSubmitting(true);
 
     try {
-      const now = new Date();
-      const fechaHoraFormatted = `${now.toISOString().slice(0, 10)} ${now.toTimeString().slice(0, 8)}`;
+      const fechaHoraFormatted = getLocalDateTimeFormatted();
 
       const enQueFallamosValor = estadoCultura === 'a' 
         ? (enQueFallamos.trim() || 'Cumplimiento Alto - Operación segura sin desviaciones')
